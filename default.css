@@ -451,20 +451,35 @@
 		float: right;
 	}
 
-	/* Create two unequal columns that floats next to each other */
+
+	/* Set additional styling options for the columns */
 	.column {
-		float: left;
-		padding: 10px;
-		/* height: 300px; */
+	float: left;
 	}
-	
+
+	/* Set width length for the left and right columns */
 	.left {
-		width: 30%;
+	width: 30%;
 	}
+
+	.leftlong {
+		width: 70%;
+		}
 	
 	.right {
-		width: 70%;
+	width: 70%;
 	}
+	.rightshort {
+		width: 30%;
+		}
+	
+	.row:after {
+	content: "";
+	display: table;
+	clear: both;
+	}
+
+
 /*********************************************************************************/
 /* Portfolio                                                                     */
 /*********************************************************************************/
