@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+*.egg
+MANIFEST
+
+# Virtual / conda
+.venv/
+venv/
+.conda/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.idea/
+.vscode/
+.clang_complete
+*.swp
+*.swo
+*~
+.ropeproject
+.spyderproject
+.spyproject
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local / env (do not commit secrets)
+.env
+.env.local
+*.local
+.envrc
+
+# Test / coverage
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+htmlcov/
+*.cover
+
+# Type checkers / linters
+.mypy_cache/
+.ruff_cache/
+.pytype/

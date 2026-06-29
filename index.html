@@ -22,6 +22,141 @@ Released   : 20130811
 
 <!--[if IE 6]><link href="default_ie6.css" rel="stylesheet" type="text/css" /><![endif]-->
 
+<style>
+  #content p, #featured p { text-align: justify; }
+  #featured .major h2,
+  #portfolio .major h2 { font-size: 2em; margin-bottom: 0.3em; }
+  #featured > .major:first-child { margin-bottom: 1em; }
+  pre { line-height: 0.5; }
+  #page { padding-bottom: 2em; }
+  .project-gifs video { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  .project-gifs .video-caption { margin: 0.5em 0 0; font-size: 0.95em; font-weight: 600; color: #333399; }
+  .project-icons { display: flex; justify-content: flex-end; align-items: center; gap: 0.75em; margin: 0 0 1em; }
+  .project-icons img { height: 80px; width: auto; }
+  .project-icons .plus { font-size: 1.75em; font-weight: 700; color: #333399; line-height: 1; }
+  .project-diagram { position: relative; margin-bottom: 1em; }
+  .project-gifs, .project-icons { position: relative; z-index: 2; }
+  .project-arrow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 1; }
+  .project-gifs > div { position: relative; z-index: 2; background: #fff; }
+  .project-arrow polyline { fill: none; stroke: #333399; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var videos = Array.prototype.slice.call(document.querySelectorAll('.project-gifs video'));
+  if (!videos.length) return;
+
+  function syncToMaster() {
+    var master = videos[0];
+    if (master.paused || master.ended) return;
+    var t = master.currentTime;
+    for (var i = 1; i < videos.length; i++) {
+      if (Math.abs(videos[i].currentTime - t) > 0.05) {
+        videos[i].currentTime = t;
+      }
+    }
+  }
+
+  function startTogether() {
+    videos.forEach(function (video) {
+      video.currentTime = 0;
+      video.pause();
+    });
+    requestAnimationFrame(function () {
+      videos.forEach(function (video) {
+        var playPromise = video.play();
+        if (playPromise && playPromise.catch) playPromise.catch(function () {});
+      });
+    });
+  }
+
+  var lastMasterTime = 0;
+  function onMasterTimeUpdate() {
+    var master = videos[0];
+    var t = master.currentTime;
+    if (t < lastMasterTime - 0.5) startTogether();
+    lastMasterTime = t;
+    syncToMaster();
+  }
+
+  Promise.all(videos.map(function (video) {
+    return new Promise(function (resolve) {
+      if (video.readyState >= 3) resolve();
+      else video.addEventListener('canplaythrough', resolve, { once: true });
+    });
+  })).then(startTogether);
+
+  videos[0].addEventListener('timeupdate', onMasterTimeUpdate);
+  videos[0].addEventListener('seeked', syncToMaster);
+
+  function updateSensorMappingArrow() {
+    var icon = document.getElementById('walking-man-icon');
+    var caption = document.getElementById('sensor-mapping-caption');
+    var svg = document.getElementById('sensor-mapping-arrow');
+    var path = document.getElementById('sensor-mapping-arrow-path');
+    var label = document.getElementById('sensor-mapping-arrow-label');
+    var container = document.querySelector('.project-diagram');
+    if (!icon || !caption || !svg || !path || !container) return;
+
+    var cr = container.getBoundingClientRect();
+    var ir = icon.getBoundingClientRect();
+    var tr = caption.getBoundingClientRect();
+
+    var x1 = ir.left - cr.left;
+    var yElbow = ir.top + ir.height / 2 - cr.top;
+    var x3 = tr.left + tr.width / 2 - cr.left;
+    var y3 = tr.bottom - cr.top + 4;
+
+    path.setAttribute('points', [
+      x1, yElbow,
+      x3, yElbow,
+      x3, y3
+    ].join(' '));
+
+    svg.setAttribute('width', container.offsetWidth);
+    svg.setAttribute('height', container.offsetHeight);
+
+    if (label) {
+      label.setAttribute('x', (x1 + x3) / 2);
+      label.setAttribute('y', yElbow - 6);
+      label.textContent = 'Diffusion-based human motion retargeting';
+    }
+  }
+
+  updateSensorMappingArrow();
+  window.addEventListener('resize', updateSensorMappingArrow);
+  window.addEventListener('load', updateSensorMappingArrow);
+  var walkingManIcon = document.getElementById('walking-man-icon');
+  if (walkingManIcon && !walkingManIcon.complete) {
+    walkingManIcon.addEventListener('load', updateSensorMappingArrow);
+  }
+  setTimeout(updateSensorMappingArrow, 250);
+
+  function equalizePortfolioBoxes() {
+    var boxes = document.querySelectorAll('#portfolio .portfolio-cards .box');
+    if (!boxes.length) return;
+
+    boxes.forEach(function (box) {
+      box.style.height = 'auto';
+      box.style.minHeight = '';
+    });
+
+    var maxHeight = 0;
+    boxes.forEach(function (box) {
+      maxHeight = Math.max(maxHeight, box.offsetHeight);
+    });
+
+    var targetHeight = Math.max(0, maxHeight - 10);
+    boxes.forEach(function (box) {
+      box.style.height = targetHeight + 'px';
+      box.style.minHeight = targetHeight + 'px';
+    });
+  }
+
+  equalizePortfolioBoxes();
+  window.addEventListener('load', equalizePortfolioBoxes);
+  window.addEventListener('resize', equalizePortfolioBoxes);
+});
+</script>
 
 </head>
 <body>
@@ -36,32 +171,32 @@ Released   : 20130811
 		</ul>
 	</div>
 </div>
-<div id="logo" class="container">
-	<h1><span>Ewerton R. Vieira</span></h1>
-</div>
 <div id="page" class="container">
 	<div id="content">
 		<div class="title">
 			<h2>About me</h2>
 		</div>
-		<p> I am currently a Post-Doctoral Associate in the Center for Discrete Mathematics and Theoretical Computer Science
-			(<a style="color: #0000ff;" href="http://dimacs.rutgers.edu">DIMACS</a>) in the School of Arts and Sciences at
-			<a style="color: #0000ff;" href="https://www.rutgers.edu">Rutgers University</a>).
-			My primary research interest is data analysis applied to robotic controllers and dynamical systems.
+		<p>
+			Senior research scientist with deep applied-mathematics expertise in automation, robot control, sensing, sensor fusion, and embedded pipelines.
+			My research spans flow matching and diffusion-based methods for robotic applications, robotic arm imitation learning using wearable human motion data,
+			and decentralized multi-agent task allocation for autonomous underwater vehicle swarms.
+			I have hands-on experience with UR5e and Baxter robotic platforms, developing manipulation tasks and sim-to-real pipelines for transferring control policies
+			from simulation to physical systems.
+		</p>
+		<p>
+			I develop algorithms to evaluate robot-control performance, robustness, and mathematical models, and architect advanced sensing, fusion, and embedded-system processing pipelines.
+			I conduct mathematical and statistical data analysis and modeling using Gaussian processes.
+</p>
+		<p>
+			<strong>Technical Skills:</strong> Python, C++, MATLAB, Linux, Git, Docker; PyTorch, scikit-learn, GPy; ROS/ROS 2, MoveIt; Gazebo and MuJoCo; robot manipulation, motion planning.
 		</p>
 
-		<pre> </pre>
-
-		<p><span>Here you can find my <span style="color: #0000ff;"><a style="color: #0000ff;" href="CV.pdf">Curriculum Vitae</a></span></span><span>
-			and&nbsp;<span style="color: #0000ff;"><a style="color: #0000ff;" href="http://lattes.cnpq.br/9011778118531233">Curriculum Lattes</a></span></span><span>.</span>
-		</p>
-
-		<pre> </pre>
-
-		<p> e-mails: <span style="color: #0000ff">er691 [at] dimacs.rutgers.edu </span></p>
-		<p> &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp <span style="color: #0000ff">ewerton [at] ufg.br </span></p>
 	</div>
-	<div id="sidebar"><a href="#" class="image image-full"><img style="width: 335px; height: 360px;" src="images/2.jpg" alt="" /></a></div>
+	<div id="sidebar" style="text-align: center;">
+		<a href="#" class="image image-full"><img style="width: 335px; height: 360px; display: block; margin: 0 auto;" src="images/2.jpg" alt="" /></a>
+		<h1 style="margin: 6px 0 2px 0;"><span>Ewerton R. Vieira</span></h1>
+		<p style="margin: 0;"><a style="color: #0000ff;" href="CV.pdf">Curriculum Vitae</a></p>
+	</div>
 </div>
 
 <!-- <pre> </pre> -->
@@ -72,21 +207,39 @@ Released   : 20130811
 			<h2>Research</h2>
 			<!-- <span class="byline">Research Interests</span> -->
 		</div>
-		<p>	My research goals are focused on analyzing data from robotic controllers and dynamical systems to
-			understand and obtain information about the global dynamics, such as identifying attractors and their regions of attraction (RoA), for safe deployment and synthesizing more effective hybrid solutions.
+		<p>
+			My research is driven by the goal of making robotic systems safer, more capable, and deployable in the real world.
+			I combine applied mathematics, data analysis, and modern learning methods to design and analyze robotic controllers and understand their global dynamics,
+			supporting safe deployment and more effective hybrid solutions.
+			I work on flow matching and diffusion-based methods for robotic applications, robotic arm imitation learning from wearable human motion data,
+			and sim-to-real pipelines for transferring control policies from simulation to physical platforms such as the UR5e and Baxter.
+			I also investigate decentralized multi-agent task allocation for autonomous underwater vehicle swarms,
+			and architect sensing, sensor fusion, and embedded-system processing pipelines grounded in mathematical and statistical modeling with Gaussian processes.
 		</p>
 
-		<div class="major">
-			<span class="byline">My Publications</span>
-		</div>
-
 		<p><span style="color: #333399; font-size: 16pt;">Dynamics, Data Analysis, and Robotic Control:</span></p>
+		<hr>
+		<div class="row">
+			<div class="column leftlong">
+				<strong>Data-Efficient RoA Verification of Black-box Controllers via Flow Matching and Conformal Inference.</strong>
+				<br>
+				D. Ramesh, S. Tangirala, M. Ying, <strong>E. R. Vieira</strong>, Y. Hung and K. E. Bekris.
+				<br>
+				<em>Submitted.</em>
+				<a style="color: #0000ff;" href="https://anonymous-beep-bop.github.io/Data-Efficient-RoA-Verification-of-Black-box-Controllers-via-Flow-Matching-and-Conformal-Inference/">website</a>
+				<p></p>
+			</div>
+			<div class="column rightshort">
+				<img src='images/adaptive_sampling.png' style="width: 100%; height: auto;">
+			</div>
+		</div>
+		<p></p>
+		<hr>
 
 		<!-- <p>(1) E. R. Vieira,  
 			Submitted to ICRA-2023 (International Conference on Robotics and Automation 2023),
 			<a style="color: #0000ff;" href="https://arxiv.org/abs/2210.01292">arXiv:2210.01292</a>
 		</p> -->
-		<hr>
 		<div class="row">
 			<div class="column left">
 				<img src='images/Success_short.gif' width="300">
@@ -100,7 +253,7 @@ Released   : 20130811
 					<em>2024 International Conference on Robotics and Automation (ICRA).</em>
 				<br>
 					<a style="color: #ff0d00;">Best Paper Award in Automation finalist.</a>
-					<a style="color: #0000ff;" href="https://arxiv.org/abs/2310.03246">arXiv:2310.03246</a>
+					<a style="color: #0000ff;" href="https://arxiv.org/abs/2310.03246">paper</a>
 				<br>
 				<p></p>
 				<p></p>
@@ -110,7 +263,6 @@ Released   : 20130811
 		<p></p>
 		<hr>
 
-		<hr>
 		<div class="row">
 			<div class="column left">
 				<img src='images/corl_figs.001.png' width="300">
@@ -133,12 +285,12 @@ Released   : 20130811
 
 		<div class="row">
 			<div class="column leftlong">
-				<strong>Effective and Robust Non-Prehensile Manipulation via Persistent Homology Guided Monte-Carlo Tree Search.</strong>
+				<strong>Persistent Homology Guided Monte-Carlo Tree Search for Effective Non-Prehensile Manipulation.</strong>
 				<br>
-				<strong>E. R. Vieira </strong>, K. Gao, D. Nakhimovich, R. Wang, K. E. Bekris and J. Yu.
+				<strong>E. R. Vieira </strong>, K. Gao, D. Nakhimovich, K. E. Bekris and J. Yu.
 				<br>
-					<em>International Symposium on Experimental Robotics (ISER 2023)</em>
-					<a style="color: #0000ff;" href="https://arxiv.org/abs/2210.01283">arXiv:2210.01283</a>
+					<em>International Symposium on Experimental Robotics (ISER 2023), Chiang Mai, Thailand.</em>
+					<a style="color: #0000ff;" href="https://arxiv.org/abs/2210.01283">paper</a>
 				<br>
 				<p></p>
 				<p></p>
@@ -215,16 +367,10 @@ Released   : 20130811
 
 		<p><span style="color: #333399; font-size: 16pt;">Theoretical Math - Topology and Dynamics:</span></p>
 
-		<p>(7) Franzosa, R.; de Rezende, K. A.; Vieira, E.R. <em>Generalized Topological Transition Matrix</em>. Topol. Methods Nonlinear Anal. 48 (2016), no. 1, 183-212.</p>
-		<p>(8) Franzosa, R.; Vieira, E.R. <em>Transition matrix theory</em>. Transactions of the American Society, <span>v. 369, p. 7737, 2017.</span></p>
-
-		<p>(9) D. Lima; M. Silveira; E. R. Vieira <em>Covering Action on Conley Theory</em>. Ergodic Theory and Dynamical Systems, 1-33, 2022. doi:10.1017/etds.2022.13.<span></span></p>
-		<p>(10) A. Romero; E.R. Vieira <em>Existence of Periodic Orbits for Piecewise-Smooth Vector Fields with Sliding Region via Conley Theory</em>. arXiv preprint, <span>2021.</span>
-			<a style="color: #0000ff;" href="https://arxiv.org/abs/2106.15569">arXiv:2106.15569</a>
-		</p>
-		<!-- <p> </p> -->
-		<!-- <p><span style="color: #333399; font-size: 16pt;">Theoretical Math - Non-abelian tensor product applied to algebraic topology:</span></p> -->
-		<p><span>(11)   R. Bastos, N.R. Rocco, E.R. Vieira </span><span><em>Finiteness of homotopy groups related to the non-abelian tensor product</em>, </span><span>Annali di Matematica Pura ed Applicata- 1923 (2019).</span></p>
+		<p>D. Lima, M. Silveira, E. R. Vieira. <em>Covering action on Conley index theory</em>. Ergodic Theory and Dynamical Systems, 1-33, 2022. doi:10.1017/etds.2022.13.</p>
+		<p>R. Bastos, N.R. Rocco, E. R. Vieira. <em>Finiteness of homotopy groups related to the non-abelian tensor product</em>. Annali di Matematica Pura ed Applicata (2019), No 1, 1–11.</p>
+		<p>R. Franzosa, E. R. Vieira. <em>Transition Matrix Theory</em>. Transactions of the American Mathematical Society, 369 (2017) 11, 7737–7764.</p>
+		<p>R. Franzosa, K. A. de Rezende, E. R. Vieira. <em>Generalized topological transition matrix</em>. Topological Methods in Nonlinear Analysis 48, No 1 (2016), 183–212.</p>
 
 
 		<!--
@@ -266,8 +412,45 @@ Released   : 20130811
 	<div id="portfolio" class="container">
 		<div class="major">
 			<h2>Projects</h2>
-			<span class="byline">Here a list of projects that I am currenting associated/working on.</span>
+			<span class="byline">Here are some projects that I am currenting associated/working on.</span>
 		</div>
+		<div class="project-diagram">
+		<div id="project-gifs" class="row project-gifs" style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: nowrap; margin-bottom: 1em;">
+			<div style="flex: 1; text-align: center; min-width: 0;">
+				<video src="gif/sync_my_movie_1.mp4" autoplay muted loop playsinline aria-label="Human Motion Database"></video>
+				<p class="video-caption">Human Motion Database</p>
+			</div>
+			<div style="flex: 1; text-align: center; min-width: 0;">
+				<video src="gif/sync_walk_slow.mp4" autoplay muted loop playsinline aria-label="Sensor Mapping"></video>
+				<p id="sensor-mapping-caption" class="video-caption">Sensor Mapping</p>
+			</div>
+			<div style="flex: 1; text-align: center; min-width: 0;">
+				<video src="gif/sync_walk_sim2.mp4" autoplay muted loop playsinline aria-label="Simulation"></video>
+				<p class="video-caption">Simulation</p>
+			</div>
+			<div style="flex: 1; text-align: center; min-width: 0;">
+				<video src="gif/sync_walk_execute2.mp4" autoplay muted loop playsinline aria-label="Robotic Arm"></video>
+				<p class="video-caption">Robotic Arm</p>
+			</div>
+		</div>
+		<div class="project-icons">
+			<img id="walking-man-icon" src="images/walking-man.jpg" alt="Walking man">
+			<span class="plus">+</span>
+			<img src="images/smartphone-and-smartwatch.jpg" alt="Smartphone and smartwatch">
+		</div>
+		<svg id="sensor-mapping-arrow" class="project-arrow" aria-hidden="true">
+			<defs>
+				<marker id="sensor-mapping-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+					<polygon points="0 0, 8 4, 0 8" fill="#333399"></polygon>
+				</marker>
+			</defs>
+			<polyline id="sensor-mapping-arrow-path" marker-end="url(#sensor-mapping-arrowhead)"></polyline>
+			<text id="sensor-mapping-arrow-label" text-anchor="middle" font-size="22" fill="#333399" font-family="Source Sans Pro, sans-serif" font-style="italic"></text>
+		</svg>
+		</div>
+		<p></p>
+		<hr>
+		<div class="portfolio-cards">
 		<div class="column1">
 			<a href="#" class="image image-full"><img src="images/pic01.jpg" height="250" alt="" /></a>
 			<div class="box">
@@ -297,6 +480,7 @@ Released   : 20130811
 				<a href="http://chomp.rutgers.edu/projects/dsgrn_viz/index.html" class="button">Access</a>
 			</div>
 		</div>
+		</div>
 	</div>
 </div>
 
@@ -318,18 +502,16 @@ Released   : 20130811
 		<p style="text-align: center;"> My main contact is Rutgers <br />  address/e-mail.</p>
 		<p style="text-align: center;"><strong>Rutgers, <br /> The State University of New Jersey <br /> Department of Mathematics</strong></p>
 		<p style="text-align: center;">Hill Center-Busch Campus<br />110 Frelinghusen Rd <br />Piscataway, NJ  08854-8019, USA</p>
-		<p style="text-align: center;"> <strong>E-mail: <span style="color: #333399">er691 [at] dimacs.rutgers.edu</span></strong></p>
+		<p style="text-align: center;"> <strong>E-mail: <span style="color: #333399">er691 [at] rutgers.edu</span></strong></p>
 		</div>
 
 
 
 
 		<div class="column3">
-		<p style="text-align: center;"> Em português contate me via UFG endereço/e-mail.</p>
-		<p style="text-align: center;"><strong> UFG, <br /> Universidade Federal de Goi&aacute;s<br />Instituto de Matem&aacute;tica e Estat&iacute;stica</strong></p>
-		<p style="text-align: center;">Campus Samambaia<br />CEP 74690-900&nbsp; <br />Goi&acirc;nia - Goi&aacute;s - Brasil.</p>
-		<!--<p style="text-align: center;">Fone: +55 62 3521 1208<br />Fone Geral: +55 62 3521-1000</p> -->
-		<p style="text-align: center;"><strong>E-mail: <span style="color: #333399">ewerton [at] ufg [dot] br </span></strong></p>
+		<p style="text-align: center;"> Contact me via Thinksense e-mail.</p>
+		<p style="text-align: center;"><strong><a style="color: #000000;" href="https://www.thinksense.com">Thinksense</a><br />Senior Research and Development Engineer</strong></p>
+		<p style="text-align: center;"><strong>E-mail: <span style="color: #333399">evieira [at] thinksense [dot] com</span></strong></p>
 		</div>
 
 		<div class="column4">
